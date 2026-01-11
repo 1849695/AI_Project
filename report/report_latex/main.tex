@@ -1,0 +1,203 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{geometry}
+\geometry{top=2cm, bottom=2cm, left=3cm, right=3cm}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\footnotesize, % Code font
+  frame=single,                      % Adds a border
+  breaklines=true,                    % Wrap long lines
+  numbers=none,                        % Add line numbers
+  numberstyle=\tiny\color{gray},       % Line number styling
+  keywordstyle=\color{blue},           % Keywords in blue
+  commentstyle=\color{gray},           % Comments in gray
+  stringstyle=\color{red}              % Strings in red
+}
+
+\title{Autonomous Space Rover}
+\author{Giovanni Recchi (1849695)}
+\date{January 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{General Idea}
+The \textbf{Space Rover Exploration project} focuses on planning and decision-making for an autonomous rover exploring an unknown terrain. The rover must navigate different locations, avoid obstacles, collect scientific samples, and manage its energy levels efficiently.
+
+To achieve this, we use \textbf{planning.domains} to define the problem and apply planners such as \textbf{LAMA} and \textbf{BFWF --FF-parsers version} to generate optimal action sequences.
+
+\section{Domain Description}
+The \textbf{Space Rover Exploration} domain models the operations of an autonomous rover navigating an extraterrestrial terrain. The rover’s objective is to explore different locations, collect scientific samples, and manage its energy levels while avoiding obstacles.
+
+\subsection{Entities}
+\begin{itemize}
+    \item \textbf{Rover}: The autonomous vehicle exploring the terrain.
+    \item \textbf{Location}: Different places in the environment where the rover can move.
+    \item \textbf{Sample}: Scientific materials that the rover can collect.
+\end{itemize}
+
+\subsection{Predicates (State Representations)}
+\begin{itemize}
+    \item \texttt{(at ?r - rover ?l - location)}: The rover is currently at a given location.
+    \item \texttt{(connected ?l1 ?l2 - location)}: Two locations are directly connected, allowing movement between them.
+    \item \texttt{(energy-empty ?r - rover)}: The rover has no energy left.
+    \item \texttt{(energy-low ?r - rover)}, \texttt{(energy-medium ?r - rover)}, \texttt{(energy-high ?r - rover)}: Different energy levels of the rover.
+    \item \texttt{(has-sample ?r - rover ?s - sample)}: The rover has collected a particular sample.
+    \item \texttt{(sample-at ?s - sample ?l - location)}: A sample is located at a specific location.
+    \item \texttt{(obstacle ?l - location)}: There is an obstacle at a given location that prevents movement.
+    \item \texttt{(sunny ?l - location)}: A location where the rover can recharge using solar panels.
+\end{itemize}
+
+\subsection{Actions}
+
+\subsubsection{Move}
+\begin{itemize}
+    \item The rover can move between connected locations if there are no obstacles.
+    \item Movement is only possible when the rover has at least some energy.
+    \item The rover’s energy level decrease after moving.
+    \item The new location is marked as visited.
+\end{itemize}
+
+\subsubsection{Recharge}
+\begin{itemize}
+    \item If the rover is in a sunny location, it can use solar energy to recharge its battery.
+\end{itemize}
+
+\subsubsection{Collect Sample}
+\begin{itemize}
+    \item The rover can collect a sample from a location where a sample is available.
+    \item Collection is only possible when the rover has at least some energy.
+    \item The rover energy level decrease after collecting.
+\end{itemize}
+
+\subsubsection{Destroy Obstacles}
+\begin{itemize}
+    \item The rover can destroy an obstacle with a laser in a location connected to the location where it is at.
+    \item The shot is only possible when the rover has at least some energy.
+    \item The rover energy level decrease after shot.
+\end{itemize}
+
+\section{Instances}
+We create three different instances that the PDDL planner can solve. In general, the first instance is the simplest, while the last is the most difficult to solve.
+
+\subsection{Instance 1}
+Instance 1 models a simple scenario in which a rover must navigate a predefined terrain while managing its energy levels. The objective is to move the rover from its starting position (\texttt{loc1}) to a designated goal location (\texttt{loc4}) while considering constraints such as connectivity and energy consumption.
+
+The \textbf{initial state} is the following: the rover starts at \texttt{loc1} with high energy. The terrain consists of connected locations: \texttt{loc1} to \texttt{loc2}, \texttt{loc2} to \texttt{loc3}, \texttt{loc3} to \texttt{loc4}, and \texttt{loc4} to \texttt{loc5}. A sample is placed at \texttt{loc2}, and \texttt{loc3} is a sunny location where the rover can recharge. The \textbf{goal} of this instance is for the rover to reach \texttt{loc4}, so the rover will ignore the sample at \texttt{loc2}.
+
+The rover must move between connected locations while managing its energy levels. If necessary, it may need to recharge at \texttt{loc3}. Collecting the sample at \texttt{loc2} is an optional task.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{instance1.pdf}
+    \caption{This is the environment of the instance 1 (red circle$=$location where the rover can recharge using solar panels). }
+    \label{fig:example}
+\end{figure}
+
+\subsection{Instance 2}
+In this scenario, the rover must navigate a terrain, collect a sample, and reach a specific goal location while avoiding obstacles and managing energy efficiently. The challenge lies in finding an alternative path or removing an obstruction.
+
+The \textbf{initial state} is the following: the rover starts at \texttt{loc1} with a high energy level. Locations are connected sequentially from \texttt{loc1} to \texttt{loc5}, but an obstacle at \texttt{loc4} blocks direct passage. However, the rover has the ability to destroy obstacles when it is in a location connected to the obstacle's location. The sample is located at \texttt{loc5}, and both \texttt{loc3} and \texttt{loc5} are sunny locations where the rover can recharge. The rover must collect the sample at \texttt{loc5} and successfully reach \texttt{loc3}.
+
+The rover must remove the obstacle at \texttt{loc4}. The rover must ensure the obstacle has sufficient energy for the action. Efficient energy management is crucial, and using sunny locations for recharging may be necessary for completing the mission successfully.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{instance2.pdf}
+    \caption{This is the environment of the instance 2.}
+    \label{fig:example}
+\end{figure}
+
+\newpage
+\subsection{Instance 3}
+In this scenario, two rovers must work together to collect multiple samples, manage their energy levels, and return to their respective starting locations. The challenge includes navigating around or removing obstacles and recharging when necessary.
+
+The \textbf{initial state} is the following: \texttt{rover1} starts at \texttt{loc1}, and \texttt{rover2} starts at \texttt{loc6}, both with high energy levels. Locations are interconnected, forming a navigable terrain. However, obstacles are present at \texttt{loc2}, \texttt{loc4}, and \texttt{loc5}. The rovers have the ability to destroy obstacles when in a location connected to the obstacle’s location. The samples are distributed across the environment: \texttt{sample1} at \texttt{loc4}, \texttt{sample2} at \texttt{loc7}, and \texttt{sample3} at \texttt{loc8}. Sunny locations where the rovers can recharge are \texttt{loc3}, \texttt{loc7}, and \texttt{loc8}. \texttt{rover1} must collect \texttt{sample1} and \texttt{sample2} and return to \texttt{loc1}, while \texttt{rover2} must collect \texttt{sample3} and return to \texttt{loc6}.
+
+The rovers must navigate around or remove obstacles at \texttt{loc2}, \texttt{loc4}, and \texttt{loc5}. Efficient energy management is essential, requiring the use of sunny locations for recharging. The coordination between the two rovers is crucial to complete the task successfully.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{instance3.pdf}
+    \caption{This is the environment of the instance 3.}
+    \label{fig:example}
+\end{figure}
+
+\section{Planning Environment}
+
+\subsection{Workflow}
+All planning tasks are modeled in \textbf{PDDL} through one domain file and three problem instances.
+We solved each instance using the \texttt{planning.domains} platform, running two different planners:
+\begin{itemize}
+    \item \textbf{LAMA} (Landmark-based planner);
+    \item \textbf{BFWS--FF Parser Version} (width-based search with FF heuristic guidance).
+\end{itemize}
+
+For each run, we saved the plan returned by the planner as a sequence of grounded actions.
+In our saved outputs, the available information is the \textbf{plan itself} (i.e., the action list), therefore the evaluation focuses on:
+\begin{itemize}
+    \item \textbf{Plan length}: number of actions in the solution;
+    \item \textbf{Action-type distribution}: number of moves, recharges, obstacle destructions, and sample collections.
+\end{itemize}
+
+\subsection{LAMA}
+LAMA is a heuristic planner that exploits \textbf{landmarks} (subgoals that must be achieved in any valid plan) and combines greedy search with refinement phases (e.g., weighted A*).
+In our domain, landmarks are naturally related to reaching key locations, removing blocking obstacles when necessary, and ensuring sample collection before returning to the goal locations.
+
+\subsection{BFWS--FF Parser Version}
+BFWS (Best-First Width Search) prioritizes states based on \textbf{novelty} (new combinations of relevant facts) and uses the \textbf{FF heuristic} to guide exploration.
+This can be beneficial in domains where the planner must balance exploration (reaching distant locations) with constraints (obstacles and energy management).
+
+\subsection{Results and Metrics}
+Table~\ref{tab:results_planning} summarizes the results extracted from the generated plans.
+For Instances 1 and 2, the plan found in our runs is the same (hence we report a single plan per instance).
+For Instance 3, we report both solutions (LAMA and BFWS), which differ slightly in length and structure.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+\textbf{Instance} & \textbf{Planner} & \textbf{Plan length} & \textbf{\#move} & \textbf{\#recharge} & \textbf{\#destroy / \#collect} \\
+\hline
+1 & LAMA / BFWS & 5 & 3 & 1 & 0 / 1 \\
+\hline
+2 & LAMA / BFWS & 13 & 8 & 3 & 1 / 1 \\
+\hline
+3 & LAMA & 29 & 17 & 6 & 3 / 3 \\
+\hline
+3 & BFWS--FF & 28 & 16 & 6 & 3 / 3 \\
+\hline
+\end{tabular}
+\caption{Planning results extracted from the generated plans: plan length and action-type distribution.}
+\label{tab:results_planning}
+\end{table}
+
+\subsection{Discussion}
+A few qualitative observations emerge from the produced plans:
+\begin{itemize}
+    \item \textbf{Instance 1 (5 actions).} The plan performs a short navigation, collects the required sample, recharges at the sunny location, and reaches the goal location.
+    \item \textbf{Instance 2 (13 actions).} The plan includes obstacle removal, then navigation to the sample location, sample collection, and finally returning to the goal location, with intermediate recharges to maintain feasibility.
+    \item \textbf{Instance 3 (multi-rover).} Both planners solve the problem by distributing tasks across the two rovers and using recharges to ensure feasibility. BFWS produces a slightly shorter plan (28 vs 29 actions) mainly by reducing one movement step, while keeping the same number of recharges and required task actions (destroy/collect).
+\end{itemize}
+
+These results show how increasing instance complexity increases plan length and requires more frequent energy management (recharge actions) and obstacle handling.
+
+\section{Conclusion}
+In this project we modeled an \textbf{autonomous space rover exploration} scenario as a classical planning problem in \textbf{PDDL}. The domain captures navigation on a graph of locations, the presence of obstacles, the possibility to recharge energy in sunny locations, and the need to collect scientific samples.
+
+We designed three instances with increasing complexity. The obtained plans reflect a clear growth in difficulty: Instance 1 requires only a short navigation with minimal energy management, Instance 2 introduces obstacle removal and a longer route that forces additional recharges, and Instance 3 extends the setting to a \textbf{multi-rover} scenario with multiple samples and obstacles, increasing both the length and the structure of the plan.
+
+We tested two heuristic planners (LAMA and BFWS--FF). The solutions show that both approaches can solve the considered instances, while producing slightly different plans in the most complex case. In particular, for Instance 3 the two planners generated plans with comparable structure (same number of required task actions such as sample collection and obstacle removal), with small differences in the navigation part, which resulted in a minor difference in plan length. Overall, the experiments confirm that increasing environmental complexity leads to longer plans and a higher number of energy-management and obstacle-handling actions, highlighting the relevance of heuristics and exploration strategies in this domain.
+
+\section{Future Work}
+Several extensions could improve both the realism of the model and the experimental analysis:
+\begin{itemize}
+    \item \textbf{Richer cost model.} Introduce action costs (e.g., different movement costs, laser usage costs, or energy consumption per action) and optimize for total cost rather than plan length.
+    \item \textbf{Stronger evaluation.} Collect additional metrics from the planner output (e.g., expanded/generated states and runtime under controlled hardware conditions) and run multiple trials to reduce variability.
+    \item \textbf{Larger benchmark set.} Create additional instances with increasing numbers of locations, obstacles, and samples to better evaluate scalability and identify the breaking point of different planners.
+    \item \textbf{Coordination constraints.} Extend the multi-rover instance with shared resources (e.g., a single charging station, limited communication, or mutual exclusion constraints) to stress cooperation and scheduling aspects.
+    \item \textbf{Uncertainty.} Model exogenous events (e.g., new obstacles appearing, solar storms, or temporary blocked connections) using contingent planning or replanning approaches.
+\end{itemize}
+\vspace{1.0cm}
+\end{document}
