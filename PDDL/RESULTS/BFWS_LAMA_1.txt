@@ -1,0 +1,5 @@
+(move rover1 loc1 loc2)
+(collect-sample rover1 sample1 loc2)
+(move rover1 loc2 loc3)
+(solar-recharge rover1 loc3)
+(move rover1 loc3 loc4)
