@@ -15,8 +15,7 @@ The PDDL problems are intended to be executed using the **PDDL Editor / planning
   - `rover-istance3.pddl`
 - `results/` (optional but recommended)
   - saved plans / outputs from the runs (e.g., `BFWS_LAMA_1.txt`, `BFWS_LAMA_2.txt`, `LAMA_3.txt`, `BFWS_3.txt`)
-- `astar/` (optional)
-  - A* implementation and instructions (if included for the homework comparison)
+
 
 ## PDDL domain overview
 
