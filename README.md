@@ -62,12 +62,6 @@ The plans include navigation (`move`), energy management (`recharge`), obstacle 
 - If your output differs slightly (especially on Instance 3), it may be due to different tie-breaking choices inside the planner.
 - If the platform provides additional metrics (runtime, expanded states, etc.), you can record them and include them in the report tables.
 
-## (Optional) A* part (for homework comparison)
-
-If this repository includes an `astar/` folder, it contains an A* implementation used for the mandatory comparison required by the homework.
-Please refer to `astar/README.md` (or comments inside the code) for execution instructions.
-
-If `astar/` is not present, this repository provides only the PDDL-based solution and results.
 
 ## Authors
 
